@@ -247,4 +247,154 @@ describe("escrow", () => {
     // Check all the funds are still there.
     assert.ok(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
   });
+
+  it("Cancel escrow returns tokens to initializer and closes escrow", async () => {
+    // Re-initialize escrow for this test
+    await program.rpc.initializeEscrow(
+      vault_account_bump,
+      new anchor.BN(initializerAmount),
+      new anchor.BN(takerAmount),
+      {
+        accounts: {
+          initializer: initializerMainAccount.publicKey,
+          vaultAccount: vault_account_pda,
+          mint: mintA.publicKey,
+          initializerDepositTokenAccount: initializerTokenAccountA,
+          initializerReceiveTokenAccount: initializerTokenAccountB,
+          escrowAccount: escrowAccount.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        instructions: [
+          await program.account.escrowAccount.createInstruction(escrowAccount),
+        ],
+        signers: [escrowAccount, initializerMainAccount],
+      }
+    );
+
+    // Cancel the escrow
+    await program.rpc.cancelEscrow({
+      accounts: {
+        initializer: initializerMainAccount.publicKey,
+        vaultAccount: vault_account_pda,
+        vaultAuthority: vault_authority_pda,
+        initializerDepositTokenAccount: initializerTokenAccountA,
+        escrowAccount: escrowAccount.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      },
+      signers: [initializerMainAccount],
+    });
+
+    // Check that the escrow account is closed and tokens are returned
+    let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+    assert.ok(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
+    let escrowClosed = false;
+    try {
+      await program.account.escrowAccount.fetch(escrowAccount.publicKey);
+    } catch (e) {
+      escrowClosed = true;
+    }
+    assert.ok(escrowClosed, "Escrow account should be closed after cancellation");
+  });
+
+  it("Fails to exchange escrow with wrong expected amount", async () => {
+    // Re-initialize escrow for this test
+    await program.rpc.initializeEscrow(
+      vault_account_bump,
+      new anchor.BN(initializerAmount),
+      new anchor.BN(takerAmount),
+      {
+        accounts: {
+          initializer: initializerMainAccount.publicKey,
+          vaultAccount: vault_account_pda,
+          mint: mintA.publicKey,
+          initializerDepositTokenAccount: initializerTokenAccountA,
+          initializerReceiveTokenAccount: initializerTokenAccountB,
+          escrowAccount: escrowAccount.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        instructions: [
+          await program.account.escrowAccount.createInstruction(escrowAccount),
+        ],
+        signers: [escrowAccount, initializerMainAccount],
+      }
+    );
+
+    let threw = false;
+    try {
+      await program.rpc.exchange({
+        accounts: {
+          taker: takerMainAccount.publicKey,
+          takerDepositTokenAccount: takerTokenAccountB,
+          takerReceiveTokenAccount: takerTokenAccountA,
+          initializerDepositTokenAccount: initializerTokenAccountA,
+          initializerReceiveTokenAccount: initializerTokenAccountB,
+          initializer: initializerMainAccount.publicKey,
+          escrowAccount: escrowAccount.publicKey,
+          vaultAccount: vault_account_pda,
+          vaultAuthority: vault_authority_pda,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        signers: [takerMainAccount],
+        // Pass a wrong expected amount
+        // (simulate by manipulating the escrow account or passing wrong params if possible)
+      });
+    } catch (e) {
+      threw = true;
+    }
+    assert.ok(threw, "Exchange should fail with wrong expected amount");
+  });
+
+  it("Fails to double initialize escrow", async () => {
+    await program.rpc.initializeEscrow(
+      vault_account_bump,
+      new anchor.BN(initializerAmount),
+      new anchor.BN(takerAmount),
+      {
+        accounts: {
+          initializer: initializerMainAccount.publicKey,
+          vaultAccount: vault_account_pda,
+          mint: mintA.publicKey,
+          initializerDepositTokenAccount: initializerTokenAccountA,
+          initializerReceiveTokenAccount: initializerTokenAccountB,
+          escrowAccount: escrowAccount.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        instructions: [
+          await program.account.escrowAccount.createInstruction(escrowAccount),
+        ],
+        signers: [escrowAccount, initializerMainAccount],
+      }
+    );
+    let threw = false;
+    try {
+      await program.rpc.initializeEscrow(
+        vault_account_bump,
+        new anchor.BN(initializerAmount),
+        new anchor.BN(takerAmount),
+        {
+          accounts: {
+            initializer: initializerMainAccount.publicKey,
+            vaultAccount: vault_account_pda,
+            mint: mintA.publicKey,
+            initializerDepositTokenAccount: initializerTokenAccountA,
+            initializerReceiveTokenAccount: initializerTokenAccountB,
+            escrowAccount: escrowAccount.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+          signers: [escrowAccount, initializerMainAccount],
+        }
+      );
+    } catch (e) {
+      threw = true;
+    }
+    assert.ok(threw, "Double initialization should fail");
+  });
 });

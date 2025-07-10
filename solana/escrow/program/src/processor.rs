@@ -225,3 +225,75 @@ impl Processor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use solana_program::{pubkey::Pubkey, account_info::AccountInfo, sysvar::rent::Rent, program_error::ProgramError};
+    use std::cell::RefCell;
+
+    #[test]
+    fn test_processor_struct_exists() {
+        let _processor = Processor;
+        assert_eq!(1, 1);
+    }
+
+    #[test]
+    fn test_init_escrow_fails_if_not_signer() {
+        // Mock accounts
+        let key = Pubkey::default();
+        let mut lamports = 0;
+        let mut data = vec![0u8; 100];
+        let account = AccountInfo::new(
+            &key,
+            false, // is_signer = false
+            true,
+            &mut lamports,
+            &mut data,
+            &key,
+            false,
+            0,
+        );
+        let accounts = vec![account];
+        let result = Processor::process_init_escrow(&accounts, 100, &Pubkey::default());
+        assert_eq!(result, Err(ProgramError::MissingRequiredSignature));
+    }
+
+    #[test]
+    fn test_init_escrow_fails_if_already_initialized() {
+        // Mock accounts
+        let key = Pubkey::default();
+        let mut lamports = 0;
+        // Set up escrow account data with is_initialized = true
+        let mut data = vec![1u8; 100]; // First byte is is_initialized = true
+        let account = AccountInfo::new(
+            &key,
+            true, // is_signer = true
+            true,
+            &mut lamports,
+            &mut data,
+            &key,
+            false,
+            0,
+        );
+        // Add required accounts for process_init_escrow
+        let mut accounts = vec![account];
+        // Add dummy accounts to satisfy next_account_info calls
+        for _ in 0..5 {
+            let mut lamports = 0;
+            let mut data = vec![0u8; 100];
+            accounts.push(AccountInfo::new(
+                &key,
+                false,
+                true,
+                &mut lamports,
+                &mut data,
+                &key,
+                false,
+                0,
+            ));
+        }
+        let result = Processor::process_init_escrow(&accounts, 100, &Pubkey::default());
+        assert_eq!(result, Err(ProgramError::AccountAlreadyInitialized));
+    }
+}
