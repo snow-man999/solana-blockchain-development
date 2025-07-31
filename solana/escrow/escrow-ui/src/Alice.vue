@@ -192,3 +192,12 @@ export default defineComponent({
   }
 })
 </script>
+// this is the e
+// it is responsible for initializing the escrow and displaying the state
+// it is also responsible for copying the escrow account pubkey
+// it is also responsible for displaying the error message and success message
+// it is also responsible for displaying the form state
+// it is also responsible for displaying the escrow state
+// it is also responsible for displaying the loading state
+// it is also responsible for displaying the error message and success message
+// it is also responsible for displaying the form state
