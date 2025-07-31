@@ -38,3 +38,4 @@ https://github.com/ddimaria/rust-blockchain-tutorial (rust block)
 https://turbin3.com/
 
 https://doc.rust-lang.org/book/
+https://doc.rsut-lang.org
