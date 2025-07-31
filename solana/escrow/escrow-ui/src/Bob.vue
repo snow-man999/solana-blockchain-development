@@ -19,6 +19,10 @@
           <input class="display-block" type="text" v-model="formState.takerYAccAddress">
         </div>
         <div class="mb-1">
+          <label for="">Bob's Y token account pubkey</label>
+          <input class="display-block" type="text" v-model="formState.takerYAccAddress">
+        </div>
+        <div class="mb-1">
           <label for="">Escrow account pubkey</label>
           <input class="display-block" type="text" v-model="formState.escrowAccAddress">
         </div>

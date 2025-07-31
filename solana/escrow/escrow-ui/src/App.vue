@@ -51,4 +51,3 @@ html, body {
   font-size: .85rem;
 }
 </style>
-// this is the main app component
