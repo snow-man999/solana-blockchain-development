@@ -40,3 +40,4 @@ https://turbin3.com/
 https://doc.rust-lang.org/book/
 https://doc.rsut-lang.org
 https://doc.rust.org
+https://doc/rust
