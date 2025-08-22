@@ -1,68 +1,69 @@
+//this is PAP.vue file
 <template>
   <div class="bg">
     <p class="title">Escrow UI - Bob's Trade Interface</p>
     <div>
       <div class="mb-1">
-          <label for="bob-private-key">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
+          <label for="private-key">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
           <input 
             class="display-block" 
             type="text" 
-            id="bob-private-key"
-            v-model="formState.privateKey"
+            id="private-key"
+            v-model="formState.privateKey" 
             placeholder="e.g. 1,2,3,..."
             :disabled="loading"
           >
       </div>
       <div class="mb-1">
-          <label for="bob-program-id">Program id</label>
+          <label for="program-id">Program id</label>
           <input 
             class="display-block" 
             type="text" 
-            id="bob-program-id" 
+            id="program-id" 
             v-model="formState.programId"
             placeholder="Program ID"
             :disabled="loading"
           >
       </div>
       <div class="mb-1">
-          <label for="bob-taker-x-acc">Bob's X token account pubkey</label>
+          <label for="taker-x-acc">Bob's X token account pubkey</label>
           <input 
             class="display-block" 
             type="text" 
-            id="bob-taker-x-acc"
+            id="taker-x-acc"
             v-model="formState.takerXAccAddress"
             placeholder="X Token Account Pubkey"
             :disabled="loading"
           >
       </div>
       <div class="mb-1">
-          <label for="bob-taker-y-acc">Bob's Y token account pubkey</label>
+          <label for="taker-y-acc">Bob's Y token account pubkey</label>
           <input 
             class="display-block" 
             type="text" 
-            id="bob-taker-y-acc"
+            id="taker-y-acc"
             v-model="formState.takerYAccAddress"
             placeholder="Y Token Account Pubkey"
             :disabled="loading"
           >
       </div>
       <div class="mb-1">
-          <label for="bob-escrow-acc">Escrow account pubkey</label>
+          <label for="escrow-acc">Escrow account pubkey</label>
           <input 
             class="display-block" 
             type="text" 
-            id="bob-escrow-acc"
+            id="escrow-acc"
             v-model="formState.escrowAccAddress"
             placeholder="Escrow Account Pubkey"
             :disabled="loading"
           >
       </div>
       <div class="mb-1">
-          <label for="bob-x-token-amount">Amount X tokens Bob wants</label>
+          <label for="x-token-amount">Amount X tokens Bob wants</label>
           <input 
             class="display-block" 
             type="number" 
-            id="bob-x-token-amount"
+            id="x-token-amount"
             v-model="formState.XTokenExpectedAmount"
             placeholder="Amount expected"
             min="0"

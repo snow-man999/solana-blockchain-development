@@ -3,36 +3,80 @@
     <p class="title">Escrow UI</p>
     <div>
       <div class="mb-1">
-          <label for="2020-12-24-programId-escrow-alice">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
-          <input class="display-block" type="text" v-model="formState.privateKey" placeholder="e.g. 1,2,3,...">
+          <label for="alice-private-key">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="alice-private-key"
+            v-model="formState.privateKey" 
+            placeholder="e.g. 1,2,3,..."
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <label for="2020-12-24-programId-escrow-alice">Program id</label>
-          <input class="display-block" type="text" id="2020-12-24-programId-escrow-alice" v-model="formState.programId" placeholder="Program ID">
+          <label for="alice-program-id">Program id</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="alice-program-id" 
+            v-model="formState.programId" 
+            placeholder="Program ID"
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <label for="">Alice's X token account pubkey</label>
-          <input class="display-block" type="text" v-model="formState.aliceXTokenAccountPubkey" placeholder="X Token Account Pubkey">
+          <label for="alice-x-token-acc">Alice's X token account pubkey</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="alice-x-token-acc"
+            v-model="formState.aliceXTokenAccountPubkey" 
+            placeholder="X Token Account Pubkey"
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <label for="">Amount of X tokens to send to escrow</label>
-          <input class="display-block" type="number" v-model="formState.amountXTokensToSendToEscrow" placeholder="Amount to send">
+          <label for="alice-x-token-amount">Amount of X tokens to send to escrow</label>
+          <input 
+            class="display-block" 
+            type="number" 
+            id="alice-x-token-amount"
+            v-model="formState.amountXTokensToSendToEscrow" 
+            placeholder="Amount to send"
+            min="0"
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <label for="">Alice's Y token account pubkey</label>
-          <input class="display-block" type="text" v-model="formState.aliceYTokenAccountPubkey" placeholder="Y Token Account Pubkey">
+          <label for="alice-y-token-acc">Alice's Y token account pubkey</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="alice-y-token-acc"
+            v-model="formState.aliceYTokenAccountPubkey" 
+            placeholder="Y Token Account Pubkey"
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <label for="">Amount of Y tokens Alice wants</label>
-          <input class="display-block" type="number" v-model="formState.amountYTokensAliceExpects" placeholder="Amount expected">
+          <label for="alice-y-token-amount">Amount of Y tokens Alice wants</label>
+          <input 
+            class="display-block" 
+            type="number" 
+            id="alice-y-token-amount"
+            v-model="formState.amountYTokensAliceExpects" 
+            placeholder="Amount expected"
+            min="0"
+            :disabled="loading"
+          >
       </div>
       <div class="mb-1">
-          <input style="margin-right: 5px;" class="cursor-pointer border-none bg-btn normal-font-size" type="submit" value="Reset UI" @click="resetAliceUI" :disabled="loading">
-          <input class="cursor-pointer border-none bg-btn normal-font-size" type="submit" value="Init escrow" @click="onInitEscrow" :disabled="!isFormValid || loading">
-          <span v-if="loading" style="margin-left: 10px;">Loading...</span>
+          <input style="margin-right: 5px;" class="cursor-pointer border-none bg-btn normal-font-size" type="button" value="Reset UI" @click="resetAliceUI" :disabled="loading">
+          <input class="cursor-pointer border-none bg-btn normal-font-size" type="button" value="Init escrow" @click="onInitEscrow" :disabled="!isFormValid || loading">
+          <span v-if="loading" style="margin-left: 10px;">Initializing escrow...</span>
       </div>
-      <div v-if="errorMessage" class="mb-1" style="color: red;">{{ errorMessage }}</div>
-      <div v-if="successMessage" class="mb-1" style="color: green;">{{ successMessage }}</div>
+      <div v-if="errorMessage" class="mb-1 error-message">{{ errorMessage }}</div>
+      <div v-if="successMessage" class="mb-1 success-message">{{ successMessage }}</div>
     </div>
     <div>
       <div class="mb-1">
@@ -192,12 +236,3 @@ export default defineComponent({
   }
 })
 </script>
-// this is the e
-// it is responsible for initializing the escrow and displaying the state
-// it is also responsible for copying the escrow account pubkey
-// it is also responsible for displaying the error message and success message
-// it is also responsible for displaying the form state
-// it is also responsible for displaying the escrow state
-// it is also responsible for displaying the loading state
-// it is also responsible for displaying the error message and success message
-// it is also responsible for displaying the form state
