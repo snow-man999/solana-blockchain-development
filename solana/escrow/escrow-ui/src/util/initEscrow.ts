@@ -1,9 +1,12 @@
-import { AccountLayout, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AccountLayout, TOKEN_PROGRAM_ID, createInitializeAccountInstruction, createTransferInstruction } from "@solana/spl-token";
 import { Account, Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { ESCROW_ACCOUNT_DATA_LAYOUT, EscrowLayout } from "./layout";
 
-const connection = new Connection("http://localhost:8899", 'singleGossip');
+const connection = new Connection(
+  process.env.VUE_APP_SOLANA_RPC_URL || "http://localhost:8899", 
+  'confirmed' as any
+);
 
 export const initEscrow = async (
     privateKeyByteArray: string,
@@ -28,9 +31,20 @@ export const initEscrow = async (
         fromPubkey: initializerAccount.publicKey,
         newAccountPubkey: tempTokenAccount.publicKey
     });
-    const initTempAccountIx = Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, XTokenMintAccountPubkey, tempTokenAccount.publicKey, initializerAccount.publicKey);
-    const transferXTokensToTempAccIx = Token
-        .createTransferInstruction(TOKEN_PROGRAM_ID, initializerXTokenAccountPubkey, tempTokenAccount.publicKey, initializerAccount.publicKey, [], amountXTokensToSendToEscrow);
+    const initTempAccountIx = createInitializeAccountInstruction(
+        tempTokenAccount.publicKey,
+        XTokenMintAccountPubkey,
+        initializerAccount.publicKey,
+        TOKEN_PROGRAM_ID
+    );
+    const transferXTokensToTempAccIx = createTransferInstruction(
+        initializerXTokenAccountPubkey,
+        tempTokenAccount.publicKey,
+        initializerAccount.publicKey,
+        amountXTokensToSendToEscrow,
+        [],
+        TOKEN_PROGRAM_ID
+    );
     
     const escrowAccount = new Account();
     const escrowProgramId = new PublicKey(escrowProgramIdString);
