@@ -7,6 +7,7 @@
         <router-link to="/bob" class="nav-link" active-class="active">Bob (Trade)</router-link>
         <router-link to="/pap" class="nav-link" active-class="active">P@P</router-link>
         <router-link to="/wormhole" class="nav-link" active-class="active">Wormhole</router-link>
+        <router-link to="/wormhole-test" class="nav-link" active-class="active">Wormhole Test</router-link>
       </div>
     </div>
   </nav>
