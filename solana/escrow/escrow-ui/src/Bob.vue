@@ -1,41 +1,100 @@
 <template>
   <div class="bg">
-    <p class="title">Escrow UI</p>
+    <p class="title">Escrow UI - Bob's Trade Interface</p>
     <div>
       <div class="mb-1">
-          <label for="2020-12-24-programId-escrow-alice">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
-          <input class="display-block" type="text" v-model="formState.privateKey">
-        </div>
-        <div class="mb-1">
-          <label for="2020-12-24-programId-escrow-alice">Program id</label>
-          <input class="display-block" type="text" id="2020-12-24-programId-escrow-alice" v-model="formState.programId">
-        </div>
-        <div class="mb-1">
-          <label for="">Bob's X token account pubkey</label>
-          <input class="display-block" type="text" v-model="formState.takerXAccAddress">
-        </div>
-        <div class="mb-1">
-          <label for="">Bob's Y token account pubkey</label>
-          <input class="display-block" type="text" v-model="formState.takerYAccAddress">
-        </div>
-        <div class="mb-1">
-          <label for="">Escrow account pubkey</label>
-          <input class="display-block" type="text" v-model="formState.escrowAccAddress">
-        </div>
-        <div class="mb-1">
-          <label for="">Amount X tokens Bob wants</label>
-          <input class="display-block" type="number" v-model="formState.XTokenExpectedAmount">
-        </div>
-        <div class="mb-1">
-          <input style="margin-right: 5px;" class="cursor-pointer border-none bg-btn normal-font-size" type="submit" value="Reset UI" @click="resetUI">
-          <input class="cursor-pointer border-none bg-btn normal-font-size" type="submit" value="Take trade" @click="onTakeTrade">
-        </div>
+          <label for="bob-private-key">Throwaway private key (as byte array from sollet.io, without the '[]')</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="bob-private-key"
+            v-model="formState.privateKey"
+            placeholder="e.g. 1,2,3,..."
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <label for="bob-program-id">Program id</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="bob-program-id" 
+            v-model="formState.programId"
+            placeholder="Program ID"
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <label for="bob-taker-x-acc">Bob's X token account pubkey</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="bob-taker-x-acc"
+            v-model="formState.takerXAccAddress"
+            placeholder="X Token Account Pubkey"
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <label for="bob-taker-y-acc">Bob's Y token account pubkey</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="bob-taker-y-acc"
+            v-model="formState.takerYAccAddress"
+            placeholder="Y Token Account Pubkey"
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <label for="bob-escrow-acc">Escrow account pubkey</label>
+          <input 
+            class="display-block" 
+            type="text" 
+            id="bob-escrow-acc"
+            v-model="formState.escrowAccAddress"
+            placeholder="Escrow Account Pubkey"
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <label for="bob-x-token-amount">Amount X tokens Bob wants</label>
+          <input 
+            class="display-block" 
+            type="number" 
+            id="bob-x-token-amount"
+            v-model="formState.XTokenExpectedAmount"
+            placeholder="Amount expected"
+            min="0"
+            :disabled="loading"
+          >
+      </div>
+      <div class="mb-1">
+          <input 
+            style="margin-right: 5px;" 
+            class="cursor-pointer border-none bg-btn normal-font-size" 
+            type="button" 
+            value="Reset UI" 
+            @click="resetUI"
+            :disabled="loading"
+          >
+          <input 
+            class="cursor-pointer border-none bg-btn normal-font-size" 
+            type="button" 
+            value="Take trade" 
+            @click="onTakeTrade"
+            :disabled="!isFormValid || loading"
+          >
+          <span v-if="loading" style="margin-left: 10px;">Processing trade...</span>
+      </div>
+      <div v-if="errorMessage" class="mb-1 error-message">{{ errorMessage }}</div>
+      <div v-if="successMessage" class="mb-1 success-message">{{ successMessage }}</div>
     </div>
   </div>
 </template>
 
 <script lang="ts"> 
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, computed, ref } from 'vue';
 import { takeTrade } from "./util/takeTrade";
 
 export default defineComponent({
@@ -49,36 +108,72 @@ export default defineComponent({
             XTokenExpectedAmount: 0
         })
 
+        const loading = ref(false);
+        const errorMessage = ref("");
+        const successMessage = ref("");
+
+        const isFormValid = computed(() => {
+            return (
+                formState.privateKey.trim() !== "" &&
+                formState.programId.trim() !== "" &&
+                formState.takerXAccAddress.trim() !== "" &&
+                formState.takerYAccAddress.trim() !== "" &&
+                formState.escrowAccAddress.trim() !== "" &&
+                formState.XTokenExpectedAmount > 0
+            );
+        });
+
         const resetUI = () => {
-          formState.privateKey = "";
-          formState.programId = "";
-          formState.takerXAccAddress = "",
-          formState.takerYAccAddress = "",
-          formState.escrowAccAddress = "",
-          formState.XTokenExpectedAmount = 0
+            formState.privateKey = "";
+            formState.programId = "";
+            formState.takerXAccAddress = "";
+            formState.takerYAccAddress = "";
+            formState.escrowAccAddress = "";
+            formState.XTokenExpectedAmount = 0;
+            errorMessage.value = "";
+            successMessage.value = "";
         }
         
         const onTakeTrade = async () => {
-          try {
-            await takeTrade(
-              formState.privateKey,
-              formState.escrowAccAddress,
-              formState.takerXAccAddress,
-              formState.takerYAccAddress,
-              formState.XTokenExpectedAmount,
-              formState.programId
-              );
-              alert("Success! Alice and Bob have traded their tokens and all temporary accounts have been closed");
-          } catch (err) {
-            if (err instanceof Error) {
-              alert(err.message);
-            } else {
-              alert(String(err));
+            if (!isFormValid.value) {
+                errorMessage.value = "Please fill in all fields with valid values.";
+                return;
             }
-          }
+            
+            loading.value = true;
+            errorMessage.value = "";
+            successMessage.value = "";
+            
+            try {
+                await takeTrade(
+                    formState.privateKey,
+                    formState.escrowAccAddress,
+                    formState.takerXAccAddress,
+                    formState.takerYAccAddress,
+                    formState.XTokenExpectedAmount,
+                    formState.programId
+                );
+                successMessage.value = "Success! Alice and Bob have traded their tokens and all temporary accounts have been closed";
+            } catch (err) {
+                if (err instanceof Error) {
+                    errorMessage.value = err.message;
+                } else {
+                    errorMessage.value = String(err);
+                }
+            } finally {
+                loading.value = false;
+            }
         }
 
-        return { formState, resetUI, onTakeTrade };
+        return { 
+            formState, 
+            resetUI, 
+            onTakeTrade, 
+            loading, 
+            errorMessage, 
+            successMessage, 
+            isFormValid 
+        };
     }
 })
 </script>
