@@ -1,10 +1,10 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import {
 	PublicKey,
 	SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, createMint, createAccount, mintTo, getAccount } from "@solana/spl-token";
 import { assert } from "chai";
 
 describe("escrow", () => {
@@ -13,12 +13,12 @@ describe("escrow", () => {
 
   const program = anchor.workspace.Escrow;
 
-  let mintA = null;
-  let mintB = null;
-  let initializerTokenAccountA = null;
-  let initializerTokenAccountB = null;
-  let takerTokenAccountA = null;
-  let takerTokenAccountB = null;
+  let mintA: PublicKey;
+  let mintB: PublicKey;
+  let initializerTokenAccountA: PublicKey;
+  let initializerTokenAccountB: PublicKey;
+  let takerTokenAccountA: PublicKey;
+  let takerTokenAccountB: PublicKey;
   let vault_account_pda = null;
   let vault_account_bump = null;
   let vault_authority_pda = null;
@@ -60,46 +60,92 @@ describe("escrow", () => {
       [payer]
     );
 
-    mintA = await Token.createMint(
+    mintA = await createMint(
       provider.connection,
       payer,
       mintAuthority.publicKey,
       null,
       0,
+      undefined,
+      undefined,
       TOKEN_PROGRAM_ID
     );
 
-    mintB = await Token.createMint(
+    mintB = await createMint(
       provider.connection,
       payer,
       mintAuthority.publicKey,
       null,
       0,
+      undefined,
+      undefined,
       TOKEN_PROGRAM_ID
     );
 
-    initializerTokenAccountA = await mintA.createAccount(initializerMainAccount.publicKey);
-    takerTokenAccountA = await mintA.createAccount(takerMainAccount.publicKey);
+    initializerTokenAccountA = await createAccount(
+      provider.connection,
+      payer,
+      mintA,
+      initializerMainAccount.publicKey,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    takerTokenAccountA = await createAccount(
+      provider.connection,
+      payer,
+      mintA,
+      takerMainAccount.publicKey,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
 
-    initializerTokenAccountB = await mintB.createAccount(initializerMainAccount.publicKey);
-    takerTokenAccountB = await mintB.createAccount(takerMainAccount.publicKey);
+    initializerTokenAccountB = await createAccount(
+      provider.connection,
+      payer,
+      mintB,
+      initializerMainAccount.publicKey,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    takerTokenAccountB = await createAccount(
+      provider.connection,
+      payer,
+      mintB,
+      takerMainAccount.publicKey,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
 
-    await mintA.mintTo(
+    await mintTo(
+      provider.connection,
+      payer,
+      mintA,
       initializerTokenAccountA,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      initializerAmount
+      mintAuthority,
+      initializerAmount,
+      [],
+      undefined,
+      TOKEN_PROGRAM_ID
     );
 
-    await mintB.mintTo(
+    await mintTo(
+      provider.connection,
+      payer,
+      mintB,
       takerTokenAccountB,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      takerAmount
+      mintAuthority,
+      takerAmount,
+      [],
+      undefined,
+      TOKEN_PROGRAM_ID
     );
 
-    let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
-    let _takerTokenAccountB = await mintB.getAccountInfo(takerTokenAccountB);
+    let _initializerTokenAccountA = await getAccount(provider.connection, initializerTokenAccountA);
+    let _takerTokenAccountB = await getAccount(provider.connection, takerTokenAccountB);
 
     assert.ok(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
     assert.ok(_takerTokenAccountB.amount.toNumber() == takerAmount);
@@ -142,7 +188,7 @@ describe("escrow", () => {
       }
     );
 
-    let _vault = await mintA.getAccountInfo(vault_account_pda);
+    let _vault = await getAccount(provider.connection, vault_account_pda);
 
     let _escrowAccount = await program.account.escrowAccount.fetch(
       escrowAccount.publicKey
@@ -180,10 +226,10 @@ describe("escrow", () => {
       signers: [takerMainAccount]
     });
 
-    let _takerTokenAccountA = await mintA.getAccountInfo(takerTokenAccountA);
-    let _takerTokenAccountB = await mintB.getAccountInfo(takerTokenAccountB);
-    let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
-    let _initializerTokenAccountB = await mintB.getAccountInfo(initializerTokenAccountB);
+    let _takerTokenAccountA = await getAccount(provider.connection, takerTokenAccountA);
+    let _takerTokenAccountB = await getAccount(provider.connection, takerTokenAccountB);
+    let _initializerTokenAccountA = await getAccount(provider.connection, initializerTokenAccountA);
+    let _initializerTokenAccountB = await getAccount(provider.connection, initializerTokenAccountB);
 
     // TODO: Assert if the PDA token account is closed
 
@@ -195,11 +241,16 @@ describe("escrow", () => {
 
   it("Initialize escrow and cancel escrow", async () => {
     // Put back tokens into initializer token A account.
-    await mintA.mintTo(
+    await mintTo(
+      provider.connection,
+      payer,
+      mintA,
       initializerTokenAccountA,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      initializerAmount
+      mintAuthority,
+      initializerAmount,
+      [],
+      undefined,
+      TOKEN_PROGRAM_ID
     );
 
     await program.rpc.initializeEscrow(
@@ -241,7 +292,7 @@ describe("escrow", () => {
     // TODO: Assert if the PDA token account is closed
 
     // Check the final owner should be the provider public key.
-    const _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+    const _initializerTokenAccountA = await getAccount(provider.connection, initializerTokenAccountA);
     assert.ok(_initializerTokenAccountA.owner.equals(initializerMainAccount.publicKey));
 
     // Check all the funds are still there.
@@ -287,7 +338,7 @@ describe("escrow", () => {
     });
 
     // Check that the escrow account is closed and tokens are returned
-    let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+    let _initializerTokenAccountA = await getAccount(provider.connection, initializerTokenAccountA);
     assert.ok(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
     let escrowClosed = false;
     try {
