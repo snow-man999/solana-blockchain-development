@@ -1,4 +1,4 @@
-# Solana program - basic
+```# Solana program - basic
 
 This is a Rust & Solana tutorial repo.
 You can learn solanan smart contract development using Rust by following the below steps.
@@ -24,7 +24,7 @@ Before starting tutorial repo, please check their README.md files first.
 ## Step4: Anchor Escrow Program
 
 - Using Anchor framework, We're building Escrow Programing again here. But we modified [escrow](https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/) program a bid differently here. You can check details [here](/anchor/anchor-escrow-master/README.md).
-
+```
 # Other resources
 
 https://solana.com/developers/courses (63 courses)
