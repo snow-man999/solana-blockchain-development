@@ -98,6 +98,10 @@
         <div>{{ escrowState.initializerAccountPubkey ?? '--' }}</div>
       </div>
       <div class="mb-1">
+        Initializer account:
+        <div>{{ escrowState.initializerAccountPubkey ?? '--' }}</div>
+      </div>
+      <div class="mb-1">
         X token temp account:
         <div>{{ escrowState.XTokenTempAccountPubkey ?? '--' }}</div>
       </div>
@@ -235,4 +239,3 @@ export default defineComponent({
     }
   }
 })
-</script>
